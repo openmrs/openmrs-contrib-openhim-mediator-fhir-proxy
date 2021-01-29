@@ -1,4 +1,4 @@
-package org.openhim.mediator.fhir.installCert;
+package org.openhim.mediator.fhir.InsertCert;
 
 /*
  * Copyright 2006 Sun Microsystems, Inc.  All Rights Reserved.
@@ -46,10 +46,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 /**
- * Class used to add the server's certificate to the KeyStore
+ * Class used to add the  mediator server's certificate to the KeyStore
  * with your trusted certificates.
  */
-public class InstallCert {
+public class InsertCert {
 
     public static void main(String[] args) throws Exception {
         String host;
