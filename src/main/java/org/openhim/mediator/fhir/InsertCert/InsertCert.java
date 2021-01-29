@@ -39,19 +39,28 @@ package org.openhim.mediator.fhir.InsertCert;
  */
 
 import javax.net.ssl.*;
+
+import com.sun.tools.sjavac.Log;
+
+import org.apache.log4j.Logger;
+
 import java.io.*;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
+
 /**
- * Class used to add the  mediator server's certificate to the KeyStore
- * with your trusted certificates.
+ * Class used to add the mediator server's certificate to the KeyStore with your
+ * trusted certificates.
  */
 public class InsertCert {
 
+    static final Logger logger = Logger.getLogger(InsertCert.class);
+    
     public static void main(String[] args) throws Exception {
+      
         String host;
         int port;
         char[] passphrase;
@@ -62,7 +71,7 @@ public class InsertCert {
             String p = (args.length == 1) ? "changeit" : args[1];
             passphrase = p.toCharArray();
         } else {
-            System.out.println("Usage: java InstallCert <host>[:port] [passphrase]");
+            logger.info("Usage: java InstallCert <host>[:port] [passphrase]");
             return;
         }
 
@@ -76,7 +85,7 @@ public class InsertCert {
                 file = new File(dir, "cacerts");
             }
         }
-        System.out.println("Loading KeyStore " + file + "...");
+        logger.info("Loading KeyStore " + file + "...");
         InputStream in = new FileInputStream(file);
         KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
         ks.load(in, passphrase);
@@ -91,53 +100,53 @@ public class InsertCert {
         context.init(null, new TrustManager[]{tm}, null);
         SSLSocketFactory factory = context.getSocketFactory();
 
-        System.out.println("Opening connection to " + host + ":" + port + "...");
+        logger.debug("Opening connection to " + host + ":" + port + "...");
         SSLSocket socket = (SSLSocket) factory.createSocket(host, port);
         socket.setSoTimeout(10000);
         try {
-            System.out.println("Starting SSL handshake...");
+            logger.info("Starting SSL handshake...");
             socket.startHandshake();
             socket.close();
-            System.out.println();
-            System.out.println("No errors, certificate is already trusted");
+            logger.info("......");
+           logger.warn("No errors, certificate is already trusted");
         } catch (SSLException e) {
-            System.out.println();
+            logger.info("......");
             e.printStackTrace(System.out);
         }
 
         X509Certificate[] chain = tm.chain;
         if (chain == null) {
-            System.out.println("Could not obtain server certificate chain");
+          logger.warn("Could not obtain server certificate chain");
             return;
         }
 
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(System.in));
 
-        System.out.println();
-        System.out.println("Server sent " + chain.length + " certificate(s):");
+                logger.info("......");
+        logger.info("Server sent " + chain.length + " certificate(s):");
         System.out.println();
         MessageDigest sha1 = MessageDigest.getInstance("SHA1");
         MessageDigest md5 = MessageDigest.getInstance("MD5");
         for (int i = 0; i < chain.length; i++) {
             X509Certificate cert = chain[i];
-            System.out.println
-                    (" " + (i + 1) + " Subject " + cert.getSubjectDN());
-            System.out.println("   Issuer  " + cert.getIssuerDN());
+           logger.info(
+                    (" " + (i + 1) + " Subject " + cert.getSubjectDN()));
+            logger.info("   Issuer  " + cert.getIssuerDN());
             sha1.update(cert.getEncoded());
-            System.out.println("   sha1    " + toHexString(sha1.digest()));
+            logger.info("   sha1    " + toHexString(sha1.digest()));
             md5.update(cert.getEncoded());
-            System.out.println("   md5     " + toHexString(md5.digest()));
-            System.out.println();
+            logger.info("   md5     " + toHexString(md5.digest()));
+            logger.debug("...............");
         }
 
-        System.out.println("Enter certificate to add to trusted keystore or 'q' to quit: [1]");
+        logger.warn("Enter certificate to add to trusted keystore or 'q' to quit: [1]");
         String line = reader.readLine().trim();
         int k;
         try {
             k = (line.length() == 0) ? 0 : Integer.parseInt(line) - 1;
         } catch (NumberFormatException e) {
-            System.out.println("KeyStore not changed");
+            logger.info("KeyStore not changed");
             return;
         }
 
@@ -149,11 +158,10 @@ public class InsertCert {
         ks.store(out, passphrase);
         out.close();
 
-        System.out.println();
-        System.out.println(cert);
-        System.out.println();
-        System.out.println
-                ("Added certificate to keystore 'jssecacerts' using alias '"
+        logger.info(".......");
+       logger.info(cert);
+       logger.info(".......");
+       logger.warn("ficate to keystore 'jssecacerts' using alias '"
                         + alias + "'");
     }
 
